@@ -1,5 +1,5 @@
-// api/data.js
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+const kv = new Redis({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN });
 
 const ASANA_TOKEN = process.env.ASANA_TOKEN;
 const WORKSPACE_GID = process.env.ASANA_WORKSPACE_GID;
