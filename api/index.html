@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POW · Agentes</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #020001;
+  --surface: #0d0d0d;
+  --surface2: #131313;
+  --border: #1a1a1a;
+  --border2: #2a2a2a;
+  --text: #DBDBDB;
+  --muted: #444;
+  --dim: #2d2d2d;
+  --orange: #FF722D;
+  --yellow: #FFEB82;
+}
+body { background: var(--bg); color: var(--text); font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 14px; min-height: 100vh; }
+.topbar { border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; background: var(--bg); }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-pill { background: var(--orange); padding: 4px 10px; border-radius: 3px; font-size: 13px; font-weight: 700; color: var(--bg); letter-spacing: 0.04em; }
+.brand-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.btn { padding: 7px 14px; font-size: 12px; border-radius: 3px; cursor: pointer; font-family: inherit; font-weight: 500; border: 1px solid var(--border2); background: transparent; color: var(--muted); transition: all 0.15s; }
+.btn:hover { border-color: var(--muted); color: var(--text); }
+.btn-primary { background: var(--orange); border-color: var(--orange); color: var(--bg); font-weight: 700; }
+.btn-primary:hover { background: #ff8c4d; }
+.layout { display: grid; grid-template-columns: 1fr 300px; min-height: calc(100vh - 53px); }
+.main { padding: 28px 32px; border-right: 1px solid var(--border); }
+.sidebar { padding: 28px 24px; }
+.sl { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; font-weight: 500; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 28px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 14px 16px; position: relative; overflow: hidden; }
+.kpi-accent { border-color: var(--orange); }
+.kpi-accent2 { border-color: var(--yellow); }
+.kpi-v { font-size: 26px; font-weight: 300; letter-spacing: -0.04em; color: var(--text); line-height: 1; }
+.kpi-v.o { color: var(--orange); }
+.kpi-v.y { color: var(--yellow); }
+.kpi-l { font-size: 10px; color: var(--dim); margin-top: 5px; text-transform: uppercase; letter-spacing: 0.08em; }
+.kpi-bar { position: absolute; bottom: 0; left: 0; height: 2px; width: 100%; }
+.kpi-bar.o { background: var(--orange); }
+.kpi-bar.y { background: var(--yellow); }
+.agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 16px 18px; border-left: 3px solid var(--orange); }
+.agent-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.agent-title-wrap { display: flex; align-items: center; gap: 10px; }
+.agent-icon { width: 32px; height: 32px; background: #1a0d00; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--orange); }
+.agent-name { font-size: 15px; font-weight: 500; color: var(--text); }
+.agent-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.toggle-wrap { display: flex; align-items: center; gap: 10px; }
+.toggle-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.toggle { width: 40px; height: 22px; border-radius: 20px; background: var(--surface2); border: 1px solid var(--border2); position: relative; cursor: pointer; transition: all 0.2s; }
+.toggle.on { background: var(--orange); border-color: var(--orange); }
+.toggle::after { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); top: 3px; left: 3px; transition: all 0.2s; }
+.toggle.on::after { background: var(--bg); left: 21px; }
+.agent-meta { display: flex; gap: 20px; }
+.meta-item { font-size: 12px; color: var(--muted); }
+.meta-item span { color: var(--text); font-weight: 500; }
+.config-form { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field.full { grid-column: span 2; }
+.field label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
+.field input { background: var(--surface2); border: 1px solid var(--border2); border-radius: 3px; padding: 8px 10px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; transition: border-color 0.15s; }
+.field input:focus { border-color: var(--orange); }
+.save-btn { grid-column: span 2; }
+.log-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-top: 20px; }
+.log-header { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.log-header-title { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.log-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+.log-body { max-height: 340px; overflow-y: auto; }
+.log-entry { display: grid; grid-template-columns: 8px 1fr auto; gap: 12px; align-items: start; padding: 10px 16px; border-bottom: 1px solid #0d0d0d; }
+.log-entry:last-child { border-bottom: none; }
+.le-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.le-dot.warn { background: var(--yellow); }
+.le-dot.over { background: var(--orange); }
+.le-dot.ok { background: #333; }
+.le-task { font-size: 13px; color: #aaa; line-height: 1.3; }
+.le-meta { font-size: 11px; color: var(--dim); margin-top: 2px; }
+.le-time { font-size: 10px; color: var(--dim); white-space: nowrap; padding-top: 2px; }
+.empty-log { padding: 32px 16px; text-align: center; font-size: 12px; color: var(--dim); }
+.sb-block { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 14px 16px; margin-bottom: 10px; }
+.sb-block.accent { border-color: var(--orange); }
+.sb-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.sb-val { font-size: 24px; font-weight: 300; letter-spacing: -0.04em; color: var(--text); }
+.sb-sub { font-size: 11px; color: var(--dim); margin-top: 3px; }
+.mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+.mg { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; }
+.mg-v { font-size: 18px; font-weight: 300; color: var(--text); }
+.mg-v.o { color: var(--orange); }
+.mg-v.y { color: var(--yellow); }
+.mg-l { font-size: 10px; color: var(--dim); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+.status-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+.paused-dot { background: var(--muted); animation: none; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border2); border-radius: 4px; padding: 10px 16px; font-size: 12px; color: var(--text); opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; z-index: 99; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.ok { border-color: var(--orange); }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-pill">POW</div>
+    <div class="brand-sub">Agentes</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn" onclick="runNow()">▶ Ejecutar ahora</button>
+  </div>
+</div>
+<div class="layout">
+  <div class="main">
+    <div class="kpis">
+      <div class="kpi kpi-accent"><div class="kpi-v o">1</div><div class="kpi-l">Agente</div><div class="kpi-bar o"></div></div>
+      <div class="kpi"><div class="kpi-v" id="kpi-tasks">—</div><div class="kpi-l">Tareas activas</div></div>
+      <div class="kpi kpi-accent2"><div class="kpi-v y" id="kpi-alerts">—</div><div class="kpi-l">Alertas enviadas</div><div class="kpi-bar y"></div></div>
+    </div>
+    <div class="sl">Taskpatrol</div>
+    <div class="agent-card">
+      <div class="agent-header">
+        <div class="agent-title-wrap">
+          <div class="agent-icon">◎</div>
+          <div>
+            <div class="agent-name">Taskpatrol</div>
+            <div class="agent-desc">Asana · menciones sin respuesta y tareas vencidas sin update</div>
+          </div>
+        </div>
+        <div class="toggle-wrap">
+          <span class="toggle-label" id="toggle-label">Activo</span>
+          <div class="toggle on" id="toggle" onclick="toggleBot()"></div>
+        </div>
+      </div>
+      <div class="agent-meta">
+        <div class="meta-item">Ejecución: <span id="meta-schedule">Diario 9:00am</span></div>
+        <div class="meta-item">Horas sin respuesta: <span id="meta-hours">24hs</span></div>
+        <div class="meta-item">Notificación: <span id="meta-email">—</span></div>
+      </div>
+      <div class="config-form">
+        <div class="field"><label>Hora de ejecución</label><input type="time" id="cfg-time" value="09:00"></div>
+        <div class="field"><label>Horas sin respuesta</label><input type="number" id="cfg-hours" value="24" min="1" max="168"></div>
+        <div class="field full"><label>Email de notificación (opcional)</label><input type="email" id="cfg-email" placeholder="tu@email.com"></div>
+        <div class="save-btn"><button class="btn btn-primary" onclick="saveConfig()" style="width:100%;">Guardar configuración</button></div>
+      </div>
+    </div>
+    <div class="sl" style="margin-top:24px;">Historial de alertas enviadas</div>
+    <div class="log-wrap">
+      <div class="log-header">
+        <span class="log-header-title"><span class="log-dot"></span>Notificaciones enviadas</span>
+        <button class="btn" onclick="loadLog()" style="padding:3px 10px;font-size:11px;">↻</button>
+      </div>
+      <div class="log-body" id="log-body"><div class="empty-log">Cargando historial...</div></div>
+    </div>
+  </div>
+  <div class="sidebar">
+    <div class="sl">Estado</div>
+    <div class="sb-block accent">
+      <div class="sb-label">Próxima ejecución</div>
+      <div class="sb-val" id="next-run">9:00 am</div>
+      <div class="sb-sub">todos los días</div>
+      <div class="status-row"><span class="status-dot" id="status-dot"></span><span id="status-text">Activo · esperando</span></div>
+    </div>
+    <div class="sl">Resumen</div>
+    <div class="mini-grid">
+      <div class="mg"><div class="mg-v o" id="mg-alerts">—</div><div class="mg-l">Alertas</div></div>
+      <div class="mg"><div class="mg-v" id="mg-tasks">—</div><div class="mg-l">Tareas</div></div>
+      <div class="mg"><div class="mg-v" id="mg-projects">—</div><div class="mg-l">Proyectos</div></div>
+      <div class="mg"><div class="mg-v y" id="mg-last">—</div><div class="mg-l">Últ. ejecución</div></div>
+    </div>
+    <div class="sl">Última ejecución</div>
+    <div class="sb-block">
+      <div class="sb-label">Resultado</div>
+      <div id="last-run-result" style="font-size:13px;color:var(--muted);margin-top:4px;">Sin datos aún</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+let botEnabled = true;
+let config = { enabled: true, alertHours: 24, notifyEmail: '', schedule: '09:00' };
+function showToast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  setTimeout(() => t.className = 'toast', 2500);
+}
+async function loadConfig() {
+  try { const res = await fetch('/api/config'); config = await res.json(); applyConfig(config); }
+  catch { applyConfig(config); }
+}
+function applyConfig(cfg) {
+  botEnabled = cfg.enabled !== false;
+  document.getElementById('cfg-time').value = cfg.schedule || '09:00';
+  document.getElementById('cfg-hours').value = cfg.alertHours || 24;
+  document.getElementById('cfg-email').value = cfg.notifyEmail || '';
+  document.getElementById('meta-schedule').textContent = `Diario ${cfg.schedule || '09:00'}`;
+  document.getElementById('meta-hours').textContent = `${cfg.alertHours || 24}hs`;
+  document.getElementById('meta-email').textContent = cfg.notifyEmail || '—';
+  document.getElementById('next-run').textContent = cfg.schedule || '9:00';
+  updateToggleUI(botEnabled);
+}
+function updateToggleUI(enabled) {
+  const tog = document.getElementById('toggle');
+  const lbl = document.getElementById('toggle-label');
+  const dot = document.getElementById('status-dot');
+  const stxt = document.getElementById('status-text');
+  if (enabled) { tog.className = 'toggle on'; lbl.textContent = 'Activo'; dot.className = 'status-dot'; stxt.textContent = 'Activo · esperando'; }
+  else { tog.className = 'toggle'; lbl.textContent = 'Pausado'; dot.className = 'status-dot paused-dot'; stxt.textContent = 'Pausado'; }
+}
+async function toggleBot() {
+  botEnabled = !botEnabled;
+  updateToggleUI(botEnabled);
+  try { await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: botEnabled }) }); showToast(botEnabled ? 'Bot activado ✓' : 'Bot pausado'); }
+  catch { showToast('Error al guardar'); }
+}
+async function saveConfig() {
+  const newConfig = { alertHours: parseInt(document.getElementById('cfg-hours').value) || 24, notifyEmail: document.getElementById('cfg-email').value, schedule: document.getElementById('cfg-time').value, enabled: botEnabled };
+  try { await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newConfig) }); config = { ...config, ...newConfig }; applyConfig(config); showToast('Configuración guardada ✓'); }
+  catch { showToast('Error al guardar'); }
+}
+async function loadLog() {
+  const body = document.getElementById('log-body');
+  try {
+    const res = await fetch('/api/config?log=1');
+    const data = await res.json();
+    const entries = (data.log || []).map(e => typeof e === 'string' ? JSON.parse(e) : e);
+    document.getElementById('kpi-alerts').textContent = entries.length;
+    document.getElementById('mg-alerts').textContent = entries.length;
+    if (entries.length === 0) { body.innerHTML = '<div class="empty-log">Sin alertas todavía — todo en orden ✓</div>'; return; }
+    body.innerHTML = entries.map(e => {
+      const dotClass = e.type === 'overdue' ? 'over' : e.type === 'mention' ? 'warn' : 'ok';
+      const ts = e.ts ? new Date(e.ts).toLocaleString('es', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+      return `<div class="log-entry"><span class="le-dot ${dotClass}"></span><div><div class="le-task">${e.taskName}</div><div class="le-meta">${e.detail} · @${e.assignee} · ${e.projectName}</div></div><span class="le-time">${ts}</span></div>`;
+    }).join('');
+  } catch { body.innerHTML = '<div class="empty-log">No se pudo cargar el historial</div>'; }
+}
+async function loadAsanaData() {
+  try {
+    const res = await fetch('/api/data');
+    const data = await res.json();
+    document.getElementById('kpi-tasks').textContent = data.tasks?.length || '—';
+    document.getElementById('mg-tasks').textContent = data.tasks?.length || '—';
+    document.getElementById('mg-projects').textContent = data.projects?.length || '—';
+    if (data.lastRun) {
+      const d = new Date(data.lastRun);
+      document.getElementById('mg-last').textContent = d.toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
+      document.getElementById('last-run-result').textContent = `${d.toLocaleDateString('es')} · ${data.alertCount || 0} alertas`;
+    }
+  } catch {}
+}
+async function runNow() {
+  showToast('Ejecutando bot...');
+  try {
+    const res = await fetch('/api/check', { headers: { Authorization: `Bearer ${window.__CRON_SECRET || ''}` } });
+    const data = await res.json();
+    showToast(data.skipped ? 'Bot pausado — activalo primero' : `Listo · ${data.alertsSent || 0} alertas ✓`);
+    if (!data.skipped) loadLog();
+  } catch { showToast('Ejecutado — revisá Asana'); }
+}
+loadConfig();
+loadLog();
+loadAsanaData();
+</script>
+</body>
+</html>
